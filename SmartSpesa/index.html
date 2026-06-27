@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SmartSpesa</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><linearGradient id='bG' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23667eea'/><stop offset='100%' stop-color='%23764ba2'/></linearGradient><rect x='10' y='10' width='100' height='100' rx='28' fill='url(%23bG)' opacity='0.1'/><path d='M60 25 C43.4 25 30 38.4 30 55 C30 80 60 95 60 95 C60 95 90 80 90 55 C90 38.4 76.6 25 60 25 Z' fill='url(%23bG)'/><path d='M52 48 C52 38 68 38 68 48' stroke='%23ffffff' stroke-width='3' fill='none' stroke-linecap='round'/><path d='M47 48 L73 48 L69 64 L51 64 Z' fill='%23ffffff'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><linearGradient id='bG' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23667eea'/><stop offset='100%' stop-color='%23764ba2'/></linearGradient><rect x='10' y='10' width='100' height='100' rx='28' fill='url(%23bG)' opacity='0.1'/><path d='M60 25 C43.4 25 30 38.4 30 55 C30 80 60 95 60 95 C60 95 90 80 90 55 C90 38.4 76.6 25 60 25 Z' fill='url(%23bG)'/><path d='M52 48 C52 38 68 38 68 48' stroke='%23ffffff' stroke-width='3' fill='none' stroke-linecap='round'/><path d='M47 48 L73 48 L69 64 L51 64 Z' fill='%23ffffff'/></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f7f6; --card-bg: #ffffff; --text-dark: #2d3748; --text-muted: #a0aec0;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea; --danger-color: #fc8181; --success-color: #48bb78;
+            --cold-color: #63b3ed; --input-bg: #edf2f7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        html, body { height: 100%; overflow: hidden; overscroll-behavior-y: none; background-color: var(--bg-color); }
+        body { font-family: 'Poppins', sans-serif; color: var(--text-dark); }
+
+        .container { max-width: 500px; margin: 0 auto; height: 100vh; height: 100dvh; overflow-y: auto; padding: 30px 15px 40px 15px; -webkit-overflow-scrolling: touch; overflow-x: hidden; }
+
+        header { text-align: center; margin-bottom: 35px; position: relative; }
+        header h1 { font-size: 32px; font-weight: 700; background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
+        
+        .btn-logout { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            background: #fee2e2; 
+            color: #ef4444; 
+            border: none; 
+            border-radius: 12px; 
+            padding: 8px 16px; 
+            font-size: 13px; 
+            font-weight: 600; 
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        }
+
+        #auth-container { text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .auth-card { background: var(--card-bg); padding: 40px 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(50,50,93,0.1); margin-top: 5vh; }
+        .auth-card h2 { margin-bottom: 10px; font-size: 26px; }
+        .auth-card input { margin-bottom: 15px; width: 100%; text-align: center; }
+
+        .notification-badge { background: #ed8936; color: white; text-align: center; padding: 12px; border-radius: 30px; margin-bottom: 25px; font-weight: 500; font-size: 14px; display: none; }
+
+        .card-form { background: var(--card-bg); padding: 30px 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(50,50,93,0.05); margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; display: flex; flex-direction: column; position: relative; }
+        .form-group label { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); }
+        
+        input[type="text"], input[type="number"], input[type="email"], input[type="password"] { padding: 15px 20px; border: 2px solid transparent; border-radius: 16px; font-size: 15px; color: var(--text-dark); background-color: var(--input-bg); font-family: 'Poppins', sans-serif; outline: none; transition: all 0.3s ease; width: 100%; }
+        input:focus { background-color: #fff; border-color: var(--primary-color); }
+        .row { display: flex; gap: 15px; }
+        .row .form-group { flex: 1; margin-bottom: 15px; }
+
+        .search-bar-wrapper { display: flex; gap: 8px; }
+        .btn-search { background: var(--primary-color); color: white; border: none; border-radius: 16px; padding: 0 15px; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); list-style: none; margin-top: 8px; max-height: 220px; overflow-y: auto; z-index: 100; display: none; border: 1px solid #e2e8f0; }
+        .autocomplete-list li { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 13px; line-height: 1.4; color: #475569; display: flex; justify-content: space-between; }
+        .autocomplete-list li strong { color: var(--text-dark); }
+        .autocomplete-list li:hover { background: #f8fafc; }
+
+        /* --- STILE SELECT2 PERSONALIZZATA --- */
+        .custom-select-trigger { padding: 15px 20px; background-color: var(--input-bg); border-radius: 16px; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .custom-select-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.15); z-index: 110; display: none; border: 1px solid #e2e8f0; padding: 10px; margin-top: 5px; }
+        .custom-select-search { padding: 10px 15px; margin-bottom: 8px; font-size: 14px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .custom-select-options { max-height: 160px; overflow-y: auto; list-style: none; }
+        .custom-select-options li { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .custom-select-options li:hover { background: #f1f5f9; color: var(--primary-color); }
+
+        /* --- SEZIONE STATISTICHE RAPIDE (TOP PRODOTTI) --- */
+        .stats-wrapper { margin-bottom: 30px; padding: 0 5px; }
+        .stats-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+        .stats-pills { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .stats-pills::-webkit-scrollbar { display: none; }
+        .pill-item { background: white; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .pill-item span { font-size: 11px; background: #e2e8f0; color: #4a5568; padding: 1px 6px; border-radius: 8px; }
+
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; background: #ebf8ff; padding: 15px 20px; border-radius: 16px; border: 1px solid #bee3f8; cursor: pointer; margin-bottom: 15px; color: #2b6cb0; font-size: 14px; font-weight: 500; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .checkbox-wrapper input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--cold-color); cursor: pointer; margin: 0; }
+
+        .btn-submit { background: var(--primary-gradient); color: white; border: none; padding: 16px; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; font-family: 'Poppins', sans-serif; transition: transform 0.2s; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25); }
+        .btn-submit:active { transform: translateY(2px); }
+        .btn-danger-full { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25); margin-top: 30px; }
+
+        h2 { font-size: 20px; font-weight: 600; color: var(--text-dark); margin: 0; }
+        
+        /* --- SWIPE ENGINE CSS --- */
+        .item-list { list-style: none; }
+        .item-list li { position: relative; margin-bottom: 15px; border-radius: 20px; overflow: hidden; background: transparent; }
+        .swipe-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 20px; display: flex; align-items: center; padding: 0 25px; color: white; font-weight: 600; font-size: 16px; z-index: 1; opacity: 0; transition: opacity 0.2s ease; }
+        .bg-done { background: var(--success-color); justify-content: flex-start; }
+        .bg-delete { background: var(--danger-color); justify-content: flex-end; }
+        .swipe-content { position: relative; z-index: 2; background: var(--card-bg); padding: 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; border: 1px solid #f0f4f8; }
+        .item-list.checkout .swipe-content { opacity: 0.7; background: #f8fafc; border-color: #e2e8f0; }
+        .item-list.checkout .item-title { text-decoration: line-through; color: var(--text-muted); }
+
+        .item-info { flex-grow: 1; margin-right: 15px; pointer-events: none; }
+        .item-title { font-weight: 600; font-size: 16px; margin-bottom: 5px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;}
+        .badge-fresco { background: var(--cold-color); color: white; font-size: 10px; padding: 3px 8px; border-radius: 8px; text-transform: uppercase; font-weight: 600;}
+        .item-meta { font-size: 13px; color: var(--text-muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .badge-store { background: var(--input-bg); color: #4a5568; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+        .badge-dist { color: #d69e2e; font-weight: 600; font-size: 12px; display: flex; align-items: center; gap: 4px; }
+
+        .actions-wrapper { display: flex; gap: 10px; }
+        .btn-round { border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .btn-done { background: #e6fffa; color: var(--success-color); }
+        .btn-navigation { background: #fffaf0; color: #ed8936; }
+        .btn-undo { background: var(--input-bg); color: var(--text-muted); }
+        .btn-delete { background: #fff5f5; color: var(--danger-color); }
+
+        @keyframes pulse-bg { 0% { background-color: var(--bg-color); } 50% { background-color: #d1fae5; } 100% { background-color: var(--bg-color); } }
+        .flash-update { animation: pulse-bg 1.2s ease-in-out 2; }
+    </style>
+</head>
+<body>
+
+<div id="auth-container" class="container">
+    <div class="auth-card">
+        <h2>Area Riservata 🔒</h2>
+        <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 14px;">Accedi per vedere la tua lista della spesa.</p>
+        <div class="form-group">
+            <input type="email" id="auth-email" placeholder="La tua email">
+            <input type="password" id="auth-password" placeholder="Password">
+        </div>
+        <button class="btn-submit" onclick="login()">Accedi alla Spesa</button>
+    </div>
+</div>
+
+<div id="app-container" class="container" style="display: none;">
+    <header>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="85" height="85" style="margin-bottom: 10px; filter: drop-shadow(0px 10px 15px rgba(102,126,234,0.3));">
+            <defs>
+                <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#667eea"/><stop offset="100%" stop-color="#764ba2"/>
+                </linearGradient>
+            </defs>
+            <rect x="10" y="10" width="100" height="100" rx="28" fill="url(#brandGrad)" opacity="0.1"/>
+            <path d="M60 25 C43.4 25 30 38.4 30 55 C30 80 60 95 60 95 C60 95 90 80 90 55 C90 38.4 76.6 25 60 25 Z" fill="url(#brandGrad)"/>
+            <path d="M52 48 C52 38 68 38 68 48" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M47 48 L73 48 L69 64 L51 64 Z" fill="#ffffff"/>
+        </svg>
+        <h1>SmartSpesa</h1>
+        <p style="font-size: 13px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.5px;">Meno strada. Più freschezza. Zero stress.</p>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </header>
+
+    <div id="update-alert" class="notification-badge">🔄 Qualcuno ha aggiornato la lista!</div>
+
+    <div class="card-form">
+        <div class="form-group">
+            <label>Cosa dobbiamo comprare?</label>
+            <input type="text" id="prodotto" placeholder="Es. Pasta, Latte, Carne..." autocomplete="off" oninput="cercaInArchivio(this.value)">
+            <ul id="autocomplete-archivio" class="autocomplete-list"></ul>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Quantità</label>
+                <input type="number" id="quantita" value="1" min="0.1" step="any">
+            </div>
+            
+            <div class="form-group">
+                <label>Unità</label>
+                <div class="custom-select-trigger" id="select-unita-trigger" onclick="toggleCustomSelect()">seleziona ▾</div>
+                <div class="custom-select-dropdown" id="select-unita-dropdown">
+                    <input type="text" class="custom-select-search" id="select-unita-search" placeholder="Cerca o scrivi nuova unità..." oninput="filtraUnita(this.value)">
+                    <ul class="custom-select-options" id="select-unita-options"></ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="form-group" style="flex: 1;">
+                <label>Città</label>
+                <input type="text" id="citta" value="Latina" placeholder="Es. Latina, Roma...">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Cerca Negozio / Indirizzo</label>
+            <div class="search-bar-wrapper">
+                <input type="text" id="ricerca-mappa" placeholder="Es. Conad via Ezio" oninput="resetNegozioSelezionato()">
+                <button id="btn-cerca-mappa" class="btn-search" onclick="cercaNegoziMappa()">🔍 Cerca</button>
+            </div>
+            <ul id="risultati-ricerca" class="autocomplete-list"></ul>
+            <small id="negozio-confermato" style="color: var(--success-color); font-size: 12px; margin-top: 5px; display: none; font-weight: 600;">✓ Negozio selezionato</small>
+        </div>
+
+        <label class="checkbox-wrapper" for="fresco">
+            <input type="checkbox" id="fresco">
+            Prodotto da frigo o fresco
+        </label>
+
+        <button id="btn-add" class="btn-submit" onclick="aggiungiArticolo()">Aggiungi alla lista</button>
+    </div>
+
+    <div class="stats-wrapper" id="sezione-frequenti" style="display: none;">
+        <div class="stats-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>⚡ Più acquistati (Tocca per inserire)</span>
+            <span style="cursor: pointer; color: var(--danger-color); font-size: 11px; font-weight: 600;" onclick="svuotaArchivio()">Azzera</span>
+        </div>
+        <div class="stats-pills" id="pills-frequenti"></div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 20px;">
+        <h2>Da prendere</h2>
+        <button class="btn-search" style="background: #ed8936; padding: 8px 15px; font-size: 13px;" onclick="avviaNavigazioneTotale()">Naviga Tutto</button>
+    </div>
+    
+    <ul id="lista-attiva" class="item-list"></ul>
+
+    <h2 style="margin-top: 40px; margin-bottom: 20px;">Nel carrello</h2>
+    <ul id="lista-checkout" class="item-list checkout"></ul>
+
+    <button class="btn-submit btn-danger-full" onclick="svuotaTutto()">Svuota tutta la lista</button>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://rkcmowfutwfwppwabkps.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrY21vd2Z1dHdmd3Bwd2Fia3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNTc0MTMsImV4cCI6MjA5NzkzMzQxM30.KBRfeIZGpBdsTFg1g8s4GTdnLLspHuvyf-pWBgszmUE";
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let coordinateAttuali = { lat: null, lon: null };
+    let negozioSelezionato = { nome: "", indirizzoComplessivo: "", lat: null, lon: null };
+    let prodottiDaComprare = [];
+    let unitaSelezionata = "seleziona";
+
+    const LISTA_UNITA_BASE = ["pezzi", "pacchi", "confezioni", "kg", "etti", "grammi", "litri", "ml", "bottiglie", "barattoli", "vasetti", "lattine", "scatole", "rotoli", "cespi"];
+
+    async function controllaSessione() {
+        const { data: { session } } = await db.auth.getSession();
+        if (session) {
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            caricaIniziale();
+            caricaStatisticheFrequenti();
+            costruisciOpzioniUnita();
+        } else {
+            document.getElementById('auth-container').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
+        }
+    }
+
+    async function login() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if(!email || !password) return alert("Inserisci email e password.");
+        const { error } = await db.auth.signInWithPassword({ email, password });
+        if (error) alert("Accesso negato."); else controllaSessione();
+    }
+
+    async function logout() { await db.auth.signOut(); controllaSessione(); }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(position => {
+            coordinateAttuali.lat = position.coords.latitude;
+            coordinateAttuali.lon = position.coords.longitude;
+            if(document.getElementById('app-container').style.display === 'block') caricaIniziale(); 
+        }, error => console.log("Geolocalizzazione disattivata."));
+    }
+
+    function calcolaDistanza(lat1, lon1, lat2, lon2) {
+        if (!lat1 || !lat2) return 0;
+        const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
+    }
+
+    // --- MOTORE DI LOGICA STATISTICHE E ARCHIVIO ---
+    async function caricaStatisticheFrequenti() {
+        const { data, error } = await db.from('archivio_prodotti').select('*').order('conteggio', { ascending: false }).limit(5);
+        const container = document.getElementById('sezione-frequenti');
+        const pillsContainer = document.getElementById('pills-frequenti');
+        
+        if (!error && data && data.length > 0) {
+            container.style.display = 'block';
+            pillsContainer.innerHTML = '';
+            data.forEach(item => {
+                const pill = document.createElement('div');
+                pill.className = 'pill-item';
+                const nomeMostrato = item.prodotto.charAt(0).toUpperCase() + item.prodotto.slice(1);
+                pill.innerHTML = `${nomeMostrato} <span>${item.conteggio}x</span>`;
+                pill.onclick = () => autocompilaModulo(item.prodotto, item.fresco, item.unita_predefinita);
+                pillsContainer.appendChild(pill);
+            });
+        } else { container.style.display = 'none'; }
+    }
+
+    async function cercaInArchivio(valore) {
+        const lista = document.getElementById('autocomplete-archivio');
+        if (valore.trim().length < 2) { lista.style.display = 'none'; return; }
+
+        const { data, error } = await db.from('archivio_prodotti').select('*').ilike('prodotto', `%${valore}%`).order('conteggio', { ascending: false }).limit(4);
+        
+        if (!error && data && data.length > 0) {
+            lista.innerHTML = '';
+            data.forEach(item => {
+                const li = document.createElement('li');
+                const nomeMostrato = item.prodotto.charAt(0).toUpperCase() + item.prodotto.slice(1);
+                li.innerHTML = `<strong>${nomeMostrato}</strong> <span style="color:var(--text-muted); font-size:11px;">Scelto ${item.conteggio} volte</span>`;
+                li.onclick = () => {
+                    autocompilaModulo(item.prodotto, item.fresco, item.unita_predefinita);
+                    lista.style.display = 'none';
+                };
+                lista.appendChild(li);
+            });
+            lista.style.display = 'block';
+        } else { lista.style.display = 'none'; }
+    }
+
+    function autocompilaModulo(prodotto, fresco, unita) {
+        document.getElementById('prodotto').value = prodotto.charAt(0).toUpperCase() + prodotto.slice(1);
+        document.getElementById('fresco').checked = fresco;
+        if (unita) {
+            unitaSelezionata = unita;
+            document.getElementById('select-unita-trigger').innerText = unita + " ▾";
+        }
+    }
+
+    // --- MOTORE SELECT2 PERSONALIZZATO ---
+    function costruisciOpzioniUnita() {
+        const container = document.getElementById('select-unita-options');
+        container.innerHTML = '';
+        LISTA_UNITA_BASE.forEach(u => {
+            const li = document.createElement('li');
+            li.innerText = u;
+            li.onclick = () => selezionaUnita(u);
+            container.appendChild(li);
+        });
+    }
+
+    function toggleCustomSelect() {
+        const dropdown = document.getElementById('select-unita-dropdown');
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        if (dropdown.style.display === 'block') document.getElementById('select-unita-search').focus();
+    }
+
+    function filtraUnita(valore) {
+        const container = document.getElementById('select-unita-options');
+        const options = container.getElementsByTagName('li');
+
+        for (let i = 0; i < options.length; i++) {
+            let testo = options[i].innerText.toLowerCase();
+            if (testo.includes(valore.toLowerCase())) {
+                options[i].style.display = "block";
+            } else { options[i].style.display = "none"; }
+        }
+
+        let opzioneLibera = document.getElementById('opzione-libera-select');
+        if (opzioneLibera) opzioneLibera.remove();
+
+        if (valore.trim() !== '' && valore.trim().length > 1) {
+            const li = document.createElement('li');
+            li.id = 'opzione-libera-select';
+            li.innerHTML = `✨ Usa "<strong>${valore}</strong>"`;
+            li.onclick = () => selezionaUnita(valore);
+            container.prepend(li);
+        }
+    }
+
+    function selezionaUnita(u) {
+        unitaSelezionata = u;
+        document.getElementById('select-unita-trigger').innerText = u + " ▾";
+        document.getElementById('select-unita-dropdown').style.display = 'none';
+        document.getElementById('select-unita-search').value = '';
+        costruisciOpzioniUnita();
+    }
+
+    // --- CHIUDI GLI AUTOCOMPLETE SE CLICCHI FUORI ---
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('select-unita-trigger').contains(e.target) && !document.getElementById('select-unita-dropdown').contains(e.target)) {
+            document.getElementById('select-unita-dropdown').style.display = 'none';
+        }
+        if (!document.getElementById('prodotto').contains(e.target)) {
+            document.getElementById('autocomplete-archivio').style.display = 'none';
+        }
+        if (!document.getElementById('ricerca-mappa').contains(e.target) && !document.getElementById('risultati-ricerca').contains(e.target)) {
+            document.getElementById('risultati-ricerca').style.display = 'none';
+        }
+    });
+
+    // --- RICERCA NEGOZIO MAPPA ---
+    async function cercaNegoziMappa() {
+        const inputNegozio = document.getElementById('ricerca-mappa').value.trim();
+        const inputCitta = document.getElementById('citta').value.trim();
+        const listaRisultati = document.getElementById('risultati-ricerca');
+        const btnCerca = document.getElementById('btn-cerca-mappa');
+
+        if (!inputNegozio || !inputCitta) return alert("Inserisci negozio e città!");
+
+        btnCerca.innerText = "⏳..."; btnCerca.disabled = true;
+        listaRisultati.innerHTML = ''; listaRisultati.style.display = 'none';
+
+        try {
+            const query = encodeURIComponent(`${inputNegozio}, ${inputCitta}`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                data.forEach(luogo => {
+                    const li = document.createElement('li');
+                    const nomePrincipale = luogo.name || inputNegozio.charAt(0).toUpperCase() + inputNegozio.slice(1);
+                    li.innerHTML = `<strong>${nomePrincipale}</strong> ${luogo.display_name}`;
+                    li.onclick = () => selezionaNegozio(nomePrincipale, luogo.display_name, luogo.lat, luogo.lon);
+                    listaRisultati.appendChild(li);
+                });
+                listaRisultati.style.display = 'block';
+            } else {
+                listaRisultati.innerHTML = `<li style="text-align:center; padding: 15px;">Nessun risultato.</li>`;
+                listaRisultati.style.display = 'block';
+            }
+        } catch (error) { alert("Errore mappe."); }
+        btnCerca.innerText = "🔍 Cerca"; btnCerca.disabled = false;
+    }
+
+    function selezionaNegozio(nome, indirizzo, lat, lon) {
+        negozioSelezionato = { nome: nome, indirizzoComplessivo: indirizzo, lat: parseFloat(lat), lon: parseFloat(lon) };
+        document.getElementById('ricerca-mappa').value = nome;
+        document.getElementById('risultati-ricerca').style.display = 'none';
+        document.getElementById('negozio-confermato').style.display = 'block';
+    }
+
+    function resetNegozioSelezionato() {
+        negozioSelezionato = { nome: "", indirizzoComplessivo: "", lat: null, lon: null };
+        document.getElementById('negozio-confermato').style.display = 'none';
+    }
+
+    // --- MOTORE SWIPE INTELLIGENTE ---
+    function applicaSwipe(swipeContent, bgDone, bgDelete, id, isPreso) {
+        let startX = 0; let startY = 0; let currentX = 0; let isDragging = false; let isSwiping = null;
+
+        swipeContent.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX; startY = e.touches[0].clientY; currentX = startX;
+            isDragging = true; isSwiping = null; swipeContent.style.transition = 'none';
+        }, {passive: true});
+
+        swipeContent.addEventListener('touchmove', e => {
+            if (!isDragging) return;
+            let diffX = e.touches[0].clientX - startX; let diffY = e.touches[0].clientY - startY;
+
+            if (isSwiping === null) {
+                if (Math.abs(diffY) > Math.abs(diffX)) isSwiping = false; else isSwiping = true;
+            }
+            if (isSwiping) {
+                currentX = e.touches[0].clientX;
+                if (diffX > 0) { bgDone.style.opacity = 1; bgDelete.style.opacity = 0; } else { bgDone.style.opacity = 0; bgDelete.style.opacity = 1; }
+                if(diffX > 100) diffX = 100 + (diffX - 100) * 0.2; if(diffX < -100) diffX = -100 + (diffX + 100) * 0.2;
+                swipeContent.style.transform = `translateX(${diffX}px)`;
+            }
+        }, {passive: true}); 
+
+        swipeContent.addEventListener('touchend', e => {
+            if (!isDragging || !isSwiping) { isDragging = false; return; }
+            isDragging = false; let diffX = currentX - startX; swipeContent.style.transition = 'transform 0.3s ease';
+
+            if (diffX > 75) {
+                swipeContent.style.transform = `translateX(150%)`; setTimeout(() => spuntaArticolo(id, !isPreso), 250);
+            } else if (diffX < -75) {
+                swipeContent.style.transform = `translateX(-150%)`; setTimeout(() => eliminaArticolo(id), 250);
+            } else {
+                swipeContent.style.transform = `translateX(0)`; bgDone.style.opacity = 0; bgDelete.style.opacity = 0;
+            }
+        });
+    }
+
+    async function caricaIniziale() {
+        const { data, error } = await db.from('lista_spesa').select('*');
+        if (!error) renderizzaListe(data);
+    }
+
+    function renderizzaListe(prodotti) {
+        const listaAttiva = document.getElementById('lista-attiva');
+        const listaCheckout = document.getElementById('lista-checkout');
+        listaAttiva.innerHTML = ''; listaCheckout.innerHTML = '';
+
+        prodotti.sort((a, b) => {
+            if (a.fresco !== b.fresco) return a.fresco ? 1 : -1;
+            if (coordinateAttuali.lat && a.latitudine && b.latitudine) {
+                const distA = calcolaDistanza(coordinateAttuali.lat, coordinateAttuali.lon, a.latitudine, a.longitudine);
+                const distB = calcolaDistanza(coordinateAttuali.lat, coordinateAttuali.lon, b.latitudine, b.longitudine);
+                return distB - distA; 
+            }
+            return 0;
+        });
+
+        prodottiDaComprare = prodotti.filter(p => !p.preso);
+
+        prodotti.forEach(item => {
+            const li = document.createElement('li');
+            const bgDone = document.createElement('div'); bgDone.className = 'swipe-bg bg-done'; bgDone.innerHTML = item.preso ? '↺ Ripristina' : '✓ Preso';
+            const bgDelete = document.createElement('div'); bgDelete.className = 'swipe-bg bg-delete'; bgDelete.innerHTML = '✕ Elimina';
+
+            const swipeContent = document.createElement('div'); swipeContent.className = 'swipe-content';
+            const infoDiv = document.createElement('div'); infoDiv.className = 'item-info';
+            
+            let badgeFresco = item.fresco ? `<span class="badge-fresco">❄️ Frigo</span>` : '';
+            let badgeSupermercato = item.supermercato ? `<span class="badge-store">${item.supermercato}</span>` : '';
+            
+            let testoDistanza = '';
+            if (!item.preso && coordinateAttuali.lat && item.latitudine) {
+                let distKm = calcolaDistanza(coordinateAttuali.lat, coordinateAttuali.lon, item.latitudine, item.longitudine);
+                testoDistanza = `<span class="badge-dist">🚗 ${distKm.toFixed(1)} km</span>`;
+            }
+            
+            infoDiv.innerHTML = `
+                <div class="item-title">${item.prodotto} ${badgeFresco}</div>
+                <div class="item-meta">
+                    <span>${item.quantita} ${item.unita}</span>
+                    ${badgeSupermercato}
+                    ${testoDistanza}
+                </div>
+            `;
+            swipeContent.appendChild(infoDiv);
+
+            const wrapperAzioni = document.createElement('div'); wrapperAzioni.className = 'actions-wrapper';
+
+            if (!item.preso) {
+                if (item.latitudine && item.longitudine) {
+                    const mapLink = document.createElement('a'); mapLink.className = 'btn-round btn-navigation'; mapLink.innerHTML = '📍'; mapLink.target = '_blank';
+                    mapLink.href = `https://www.google.com/maps/search/?api=1&query=${item.latitudine},${item.longitudine}`;
+                    wrapperAzioni.appendChild(mapLink);
+                }
+                const checkBtn = document.createElement('button'); checkBtn.className = 'btn-round btn-done'; checkBtn.innerText = '✓';
+                checkBtn.onclick = () => spuntaArticolo(item.id, true);
+                wrapperAzioni.appendChild(checkBtn);
+                
+                swipeContent.appendChild(wrapperAzioni); li.appendChild(bgDone); li.appendChild(bgDelete); li.appendChild(swipeContent);
+                listaAttiva.appendChild(li);
+            } else {
+                const ripristinaBtn = document.createElement('button'); ripristinaBtn.className = 'btn-round btn-undo'; ripristinaBtn.innerText = '↺';
+                ripristinaBtn.onclick = () => spuntaArticolo(item.id, false);
+                wrapperAzioni.appendChild(ripristinaBtn);
+                
+                const eliminaBtn = document.createElement('button'); eliminaBtn.className = 'btn-round btn-delete'; eliminaBtn.innerText = '✕';
+                eliminaBtn.onclick = () => eliminaArticolo(item.id);
+                wrapperAzioni.appendChild(eliminaBtn);
+                
+                swipeContent.appendChild(wrapperAzioni); li.appendChild(bgDone); li.appendChild(bgDelete); li.appendChild(swipeContent);
+                listaCheckout.appendChild(li);
+            }
+            applicaSwipe(swipeContent, bgDone, bgDelete, item.id, item.preso);
+        });
+    }
+
+    async function aggiungiArticolo() {
+        const prodottoInput = document.getElementById('prodotto').value.trim();
+        const quantita = document.getElementById('quantita').value;
+        const inputNegozioManuale = document.getElementById('ricerca-mappa').value.trim();
+        const isFresco = document.getElementById('fresco').checked;
+
+        if (!prodottoInput) return alert("Inserisci il nome del prodotto!");
+
+        let nomeFinale = inputNegozioManuale; let latDaSalvare = null; let lonDaSalvare = null;
+        if (negozioSelezionato.lat !== null && negozioSelezionato.nome === inputNegozioManuale) {
+            nomeFinale = negozioSelezionato.nome; latDaSalvare = negozioSelezionato.lat; lonDaSalvare = negozioSelezionato.lon;
+        }
+
+        // 1. Inserisce il prodotto nella lista spesa corrente
+        await db.from('lista_spesa').insert([{
+            prodotto: prodottoInput, quantita: parseFloat(quantita), unita: unitaSelezionata,
+            supermercato: nomeFinale, latitudine: latDaSalvare, longitudine: lonDaSalvare,
+            fresco: isFresco, preso: false
+        }]);
+
+        // 2. LOGICA INTENT ARCHIVIO: salva o incrementa il contatore delle statistiche
+        const prodottoChiave = prodottoInput.toLowerCase();
+        const { data: esistente } = await db.from('archivio_prodotti').select('*').eq('prodotto', prodottoChiave).single();
+        
+        if (esistente) {
+            await db.from('archivio_prodotti').update({ conteggio: esistente.conteggio + 1, fresco: isFresco, unita_predefinita: unitaSelezionata }).eq('id', esistente.id);
+        } else {
+            await db.from('archivio_prodotti').insert([{ prodotto: prodottoChiave, conteggio: 1, fresco: isFresco, unita_predefinita: unitaSelezionata }]);
+        }
+
+        // Reset campi
+        document.getElementById('prodotto').value = ''; document.getElementById('fresco').checked = false;
+        caricaIniziale(); 
+        caricaStatisticheFrequenti();
+    }
+
+    async function spuntaArticolo(id, stato) { await db.from('lista_spesa').update({ preso: stato }).eq('id', id); caricaIniziale(); }
+    
+    async function eliminaArticolo(id) { await db.from('lista_spesa').delete().eq('id', id); caricaIniziale(); }
+
+    async function svuotaTutto() {
+        if(confirm("Sei sicuro di voler azzerare l'intera lista?")) {
+            await db.from('lista_spesa').delete().neq('id', 0);
+            caricaIniziale(); 
+        }
+    }
+
+    async function svuotaArchivio() {
+        if(confirm("Sei sicuro di voler azzerare la memoria intelligente? Questo eliminerà i suggerimenti e i contatori dei prodotti più acquistati, ma NON toccherà la tua attuale lista della spesa.")) {
+            await db.from('archivio_prodotti').delete().neq('id', 0);
+            document.getElementById('sezione-frequenti').style.display = 'none';
+        }
+    }
+
+    function avviaNavigazioneTotale() {
+        if (prodottiDaComprare.length === 0) return alert("Nessun prodotto da comprare!");
+        const tappeUniche = [];
+        prodottiDaComprare.forEach(p => {
+            if (p.latitudine && p.longitudine) {
+                const coord = `${p.latitudine},${p.longitudine}`;
+                if (!tappeUniche.includes(coord)) tappeUniche.push(coord);
+            }
+        });
+        if (tappeUniche.length === 0) return alert("Nessun negozio mappato.");
+        
+        if (tappeUniche.length === 1) { 
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${tappeUniche[0]}`, '_blank'); 
+            return; 
+        }
+        
+        const destinazioneFinale = tappeUniche.pop(); 
+        const fermateIntermedie = tappeUniche.join('|');
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${destinazioneFinale}&waypoints=${fermateIntermedie}`, '_blank');
+    }
+
+    db.channel('cambiamenti-lista').on('postgres_changes', { event: '*', filter: 'table=eq.lista_spesa', schema: 'public' }, payload => {
+        if(document.getElementById('app-container').style.display === 'block') {
+            document.body.classList.add('flash-update'); document.getElementById('update-alert').style.display = 'block';
+            caricaIniziale();
+            setTimeout(() => { document.body.classList.remove('flash-update'); document.getElementById('update-alert').style.display = 'none'; }, 3000);
+        }
+    }).subscribe();
+
+    controllaSessione();
+</script>
+</body>
+</html>
