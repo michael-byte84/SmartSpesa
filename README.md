@@ -1,7 +1,3 @@
-Ecco una proposta di `README.md` professionale, ottimizzata per GitHub, strutturata per essere chiara e accogliente per altri sviluppatori.
-
----
-
 # 🛒 SmartSpesa
 
 > **Meno strada. Più freschezza. Zero stress.**
