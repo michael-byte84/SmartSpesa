@@ -1,43 +1,50 @@
+Ecco una proposta di `README.md` professionale, ottimizzata per GitHub, strutturata per essere chiara e accogliente per altri sviluppatori.
+
+---
+
 # 🛒 SmartSpesa
 
 > **Meno strada. Più freschezza. Zero stress.**
 
-SmartSpesa è una web-app mobile-first progettata per rivoluzionare il modo in cui fai la spesa. Non è una semplice "to-do list", ma un vero e proprio **navigatore logistico per i tuoi acquisti**. L'app ordina automaticamente i prodotti in base alla tua posizione GPS e alla tipologia di alimento, generando un itinerario perfetto.
-
-## ✨ Funzionalità Principali (La Magia)
-
-* **🗺️ Routing Intelligente (Distanza):** Grazie al calcolo delle coordinate GPS, i prodotti vengono ordinati dal supermercato più lontano a quello più vicino a te.
-* **❄️ Salvataggio Freschi (Temperatura):** I prodotti contrassegnati come "Frigo/Fresco" vengono forzati in fondo alla lista e come ultima tappa del navigatore, per non farli rovinare.
-* **🧭 Navigatore Multi-Tappa:** Un solo tap sul pulsante "Naviga Tutto" genera automaticamente un percorso Google Maps con fermate intermedie per tutti i negozi della tua lista.
-* **🧠 Memoria Statistica:** L'app impara dalle tue abitudini. I prodotti frequenti vengono autocompletati e i 5 più acquistati appaiono in una barra rapida ("One-tap add").
-* **👆 Swipe Gestures Native:** Esperienza fluida come un'app iOS/Android. Scorri a destra per spuntare un prodotto, scorri a sinistra per eliminarlo.
-* **🔐 Sincronizzazione in Tempo Reale:** Basata su Supabase, permette a più persone di vedere la lista aggiornarsi in diretta (Live Updates).
-
-## 🛠️ Stack Tecnologico
-
-* **Frontend:** HTML5, CSS3, Vanilla JavaScript (Zero framework per la massima leggerezza).
-* **Backend & Database:** [Supabase](https://supabase.com/) (PostgreSQL, Row Level Security, Auth).
-* **Mappe & Geocoding:** API Nominatim (OpenStreetMap) per la ricerca, Google Maps per il routing.
+SmartSpesa è una web-app mobile-first progettata per rivoluzionare il modo in cui fai la spesa. Non è una semplice "to-do list", ma un vero e proprio **navigatore logistico per i tuoi acquisti**. L'app ordina automaticamente i prodotti in base alla tua posizione GPS e alla tipologia di alimento, generando un itinerario perfetto per ottimizzare il tuo tempo e preservare la qualità dei prodotti freschi.
 
 ---
 
-## 🚀 Come usare questo progetto (Setup Database)
+## ✨ Funzionalità Principali
 
-Se hai clonato o scaricato questo repository, l'interfaccia non funzionerà finché non collegherai il **tuo** database personale. Il progetto utilizza Supabase come backend.
+* **🗺️ Routing Intelligente:** Grazie al calcolo delle coordinate GPS, i prodotti vengono ordinati dal supermercato più lontano a quello più vicino a te.
+* **❄️ Salvataggio Freschi:** I prodotti contrassegnati come "Frigo/Fresco" vengono gestiti con priorità logica, posizionandoli come ultima tappa per evitarne il deterioramento.
+* **🧠 Memoria Statistica:** L'app impara dalle tue abitudini. I prodotti frequenti vengono autocompletati e i 5 più acquistati appaiono in una barra rapida ("One-tap add").
+* **👆 Gestures Native:** Esperienza fluida ottimizzata per mobile. Swipe a destra per spuntare, swipe a sinistra per eliminare.
+* **⚡ Real-time Sync:** Grazie a Supabase, la lista si aggiorna in tempo reale su tutti i dispositivi collegati.
 
-Segui questi passaggi per attivare l'app in 5 minuti:
+---
 
-### 1. Crea il progetto Supabase
-1. Vai su [Supabase.com](https://supabase.com) e crea un account gratuito.
-2. Crea un nuovo progetto.
-3. Vai nella sezione **Authentication** -> **Providers** e assicurati che l'accesso tramite Email sia attivo. 
-4. Vai su **Authentication** -> **Users** e crea il tuo utente (la tua email e password per accedere all'app).
+## 🛠️ Stack Tecnologico
 
-### 2. Configura le Tabelle e la Sicurezza (RLS)
-Vai nella sezione **SQL Editor** di Supabase, apri una nuova query e incolla questo codice per creare le tabelle e attivare la sicurezza:
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript (zero framework, massima velocità).
+* **Backend & DB:** [Supabase](https://supabase.com/) (PostgreSQL, Realtime, Auth).
+* **Mappe & Geocoding:** API Nominatim (OpenStreetMap) per il parsing degli indirizzi.
+* **Librerie:** [SortableJS](https://sortablejs.github.io/Sortable/) per il drag & drop degli elementi.
+
+---
+
+## 🚀 Setup & Installazione
+
+Per far funzionare l'app, è necessario collegare il tuo progetto Supabase.
+
+### 1. Configurazione Supabase
+
+1. Crea un account su [Supabase](https://supabase.com) e avvia un nuovo progetto.
+2. In **Authentication** -> **Providers**, abilita l'autenticazione tramite Email.
+3. In **Authentication** -> **Users**, aggiungi il tuo account per accedere.
+
+### 2. Database Schema
+
+Vai nello **SQL Editor** del tuo progetto e crea le tabelle necessarie eseguendo questo script:
 
 ```sql
--- Crea la tabella per la lista della spesa
+-- Tabella Lista della Spesa
 CREATE TABLE public.lista_spesa (
     id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
     prodotto text NOT NULL,
@@ -50,7 +57,7 @@ CREATE TABLE public.lista_spesa (
     preso boolean DEFAULT false
 );
 
--- Crea la tabella per l'archivio intelligente
+-- Tabella Archivio Intelligente
 CREATE TABLE public.archivio_prodotti (
     id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
     prodotto text UNIQUE NOT NULL,
@@ -59,10 +66,26 @@ CREATE TABLE public.archivio_prodotti (
     unita_predefinita text
 );
 
--- Attiva la sicurezza (RLS) su entrambe le tabelle
+-- Attivazione Row Level Security (RLS)
 ALTER TABLE public.lista_spesa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.archivio_prodotti ENABLE ROW LEVEL SECURITY;
 
--- Crea le regole per permettere l'accesso solo agli utenti autenticati
+-- Policy di accesso
 CREATE POLICY "Accesso Privato Lista" ON public.lista_spesa FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Accesso Privato Archivio" ON public.archivio_prodotti FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+```
+
+### 3. Collegamento al progetto
+
+Nel file `index.html`, aggiorna le costanti `SUPABASE_URL` e `SUPABASE_KEY` con le credenziali trovate in **Project Settings > API** del tuo pannello Supabase.
+
+---
+
+## 📄 Licenza
+
+Questo progetto è distribuito sotto licenza [MIT](https://www.google.com/search?q=LICENSE).
+
+---
+
+*Se hai trovato utile questo progetto, lascia una ⭐ su questo repository!*
